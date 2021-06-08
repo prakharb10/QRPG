@@ -12,43 +12,47 @@ st.subheader('by Prakhar Bhatnagar')
 
 st.text_area('What is this project?',
              value='A program to generate truly random numbers using real Quantum Computers and then generate a password using them.')
-pass_length = st.slider('Password Length', min_value=4,
-                        max_value=12, value=8, step=2)
 
 backend_choice = st.radio('Choose a backend', ('Simulator', 'IBMQ Device'))
-if(backend_choice == 'IBMQ Device'):
-    st.info('To run the program on a real Quantum Computer, you have to enter your IBMQ Account Token which can be found on the Account Page of your IBM Quantum Experience Account.')
-    account_token = st.text_input('IBMQ Account Token')
-    if (account_token):
+
+
+@st.cache(suppress_st_warning=True)
+def loadAccount(token):
+    try:
+        IBMQ.enable_account(account_token)
+    except IBMQAccountError:
         try:
-            IBMQ.enable_account(account_token)
-        except IBMQAccountError:
-            try:
-                IBMQ.load_account()
-            except:
-                st.error('Error occured while loading IBMQ Account')
-            else:
-                st.success('Loaded account successfully!')
-                provider = IBMQ.get_provider(hub='ibm-q')
-                backendd = least_busy(provider.backends(filters=lambda x: x.configuration().n_qubits >= 5
-                                                        and not x.configuration().simulator
-                                                        and x.status().operational == True))
-                st.write('Backend Chosen: ', backendd.name())
+            IBMQ.load_account()
         except:
             st.error('Error occured while loading IBMQ Account')
         else:
             st.success('Loaded account successfully!')
-            provider = IBMQ.get_provider(hub='ibm-q')
-            backendd = least_busy(provider.backends(filters=lambda x: x.configuration().n_qubits >= 5
-                                                    and not x.configuration().simulator
-                                                    and x.status().operational == True))
-            st.write('Backend Chosen: ', backendd.name())
-else:
-    backendd = Aer.get_backend('qasm_simulator')
+    except:
+        st.error('Error occured while loading IBMQ Account')
+    else:
+        st.success('Loaded account successfully!')
+
 
 if(backend_choice == 'IBMQ Device'):
+    st.info('To run the program on a real Quantum Computer, you have to enter your IBMQ Account Token which can be found on the Account Page of your IBM Quantum Experience Account.')
+    account_token = st.text_input('IBMQ Account Token')
     st.info('NOTE: Running the task on a real quantum computer may take upto several minutes depending on the job queue')
+    if(account_token != ""):
+        loadAccount(account_token)
+
+pass_length = st.slider('Password Length', min_value=4,
+                        max_value=12, value=8, step=2)
 clicked = st.button("Generate")
+
+
+def getBackend():
+    provider = IBMQ.get_provider(hub='ibm-q')
+    backendd = least_busy(provider.backends(filters=lambda x: x.configuration().n_qubits >= 5
+                                            and not x.configuration().simulator
+                                            and x.status().operational == True))
+    st.write('Backend Chosen: ', backendd.name())
+    return backendd
+
 
 with st.echo():
 
@@ -61,7 +65,11 @@ with st.echo():
 
 
 def run_job(circ, sht):
-    job = execute(circ, backend=backendd, shots=int(sht))
+    if(backend_choice == 'IBMQ Device'):
+        bk = getBackend()
+    else:
+        bk = Aer.get_backend('qasm_simulator')
+    job = execute(circ, backend=bk, shots=int(sht))
     job_monitor(job)
     counts = job.result().get_counts()
     ccounts = counts.copy()
@@ -69,6 +77,7 @@ def run_job(circ, sht):
         counts[int(str(i), 2)] = counts[i]
         del counts[i]
     st.write(plot_histogram(counts, title='Job Result', figsize=(10, 5)))
+    st.balloons()
     bintoASCII(ccounts)
 
 
@@ -89,7 +98,6 @@ def bintoASCII(count):
             char = chr(num)
             password += char
     st.title(password)
-    st.balloons()
 
 
 if (clicked):
@@ -97,3 +105,4 @@ if (clicked):
     st.write(c.draw(output='mpl', interactive=True))
     st.caption('Quantum Circuit')
     run_job(c, pass_length)
+    clicked = not clicked
