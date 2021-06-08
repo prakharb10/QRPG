@@ -52,7 +52,6 @@ clicked = st.button("Generate")
 
 with st.echo():
 
-    @st.cache
     def circuit():
         q = QuantumRegister(5, 'q')
         circuit = QuantumCircuit(q)
