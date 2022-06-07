@@ -1,7 +1,6 @@
-from qiskit import QuantumRegister, execute, QuantumCircuit, IBMQ, Aer
+from qiskit import QuantumRegister, execute, QuantumCircuit, IBMQ, Aer, transpile
 from qiskit.providers.ibmq import least_busy
 from qiskit.providers.ibmq.exceptions import IBMQAccountError
-from qiskit.tools.monitor import job_monitor
 from qiskit.visualization import plot_histogram
 import streamlit as st
 
@@ -11,7 +10,8 @@ st.header('Using Qiskit and IBMQ')
 st.subheader('by Prakhar Bhatnagar')
 
 st.text_area('What is this project?',
-             value='A program to generate truly random numbers using real Quantum Computers and then generate a password using them.')
+             value='A program to generate truly random numbers using real Quantum Computers and then '
+                   'generate a password using them.') 
 
 backend_choice = st.radio('Choose a backend', ('Simulator', 'IBMQ Device'))
 
@@ -35,10 +35,12 @@ def loadAccount(token):
 
 if backend_choice == 'IBMQ Device':
     st.info(
-        'To run the program on a real Quantum Computer, you have to enter your IBMQ Account Token which can be found on the Account Page of your IBM Quantum Experience Account.')
+        'To run the program on a real Quantum Computer, you have to enter your IBMQ Account Token '
+        'which can be found on the Account Page of your IBM Quantum Experience Account.')
     account_token = st.text_input('IBMQ Account Token')
     st.info(
-        'NOTE: Running the task on a real quantum computer may take upto several minutes depending on the job queue')
+        'NOTE: Running the task on a real quantum computer may take upto several minutes depending on '
+        'the job queue')
     if account_token != "":
         loadAccount(account_token)
 
@@ -66,7 +68,7 @@ with st.echo():
         return circuit
 
 
-def job_state_print(job_id, job_status, job, queue_info):
+def job_state_print(job_id, job_status, job_result):
     print(job_status)
     st.write(job_status)
 
