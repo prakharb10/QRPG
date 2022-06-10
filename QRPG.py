@@ -68,7 +68,7 @@ with st.echo():
         return circuit
 
 
-def job_state_print(job_id, job_status, job_result):
+def job_state_print(job_id, job_status, job, queue_info):
     print(job_status)
     st.write(job_status)
 
